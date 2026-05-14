@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         $user = User::firstOrCreate([
             'name' => 'Admin Fabric',
             'email' => 'admin@gmail.com', // Email untuk login
-            'password' => bcrypt('password123'),
+            'password' => bcrypt('password'),
             'phone' => '082137943030',
             'role' => 'admin', // Pastikan kolom role ada
         ]);
@@ -25,11 +25,10 @@ class DatabaseSeeder extends Seeder
         $user = User::create([
             'name' => 'User',
             'email' => 'user@gmail.com', // Email untuk login
-            'password' => bcrypt('password123'),
+            'password' => bcrypt('password'),
             'phone' => '082137943030',
             'role' => 'user', // Pastikan kolom role ada
         ]);
-
 
         // 2. Buat Data Kategori
         $catCotton = Category::create(['name' => 'Cotton']);

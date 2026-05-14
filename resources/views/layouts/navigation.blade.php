@@ -53,7 +53,15 @@
                         Shop Reviews
                     </a>
 
+                    <a href="{{ route('admin.venues.index') }}"
+                        class="text-xs font-bold text-gray-500 hover:text-black transition uppercase tracking-widest">
+                        Manage Venues
+                    </a>
                     
+                    <a href="{{ route('admin.notifications.broadcast') }}"
+                        class="text-xs font-bold text-gray-500 hover:text-black transition uppercase tracking-widest">
+                        Broadcast
+                    </a>
                 @endif
             </div>
 
@@ -163,6 +171,12 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="/admin/shop-reviews">
                     {{ __('Shop Reviews') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.venues.index')">
+                    {{ __('Manage Venues') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.notifications.broadcast')">
+                    {{ __('Broadcast') }}
                 </x-responsive-nav-link>
             @endif
         </div>

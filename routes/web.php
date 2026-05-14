@@ -126,6 +126,18 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin/shop-reviews', [ShopReviewController::class, 'adminIndex'])->name('admin.shopReviews.index');
     Route::post('/admin/shop-reviews/{review}/approve', [ShopReviewController::class, 'approve'])->name('admin.shopReviews.approve');
     Route::post('/admin/shop-reviews/{review}/reject', [ShopReviewController::class, 'reject'])->name('admin.shopReviews.reject');
+
+    // Admin Venues
+    Route::get('/admin/venues', [VenueController::class, 'adminIndex'])->name('admin.venues.index');
+    Route::get('/admin/venues/create', [VenueController::class, 'create'])->name('admin.venues.create');
+    Route::post('/admin/venues', [VenueController::class, 'store'])->name('admin.venues.store');
+    Route::get('/admin/venues/{venue}/edit', [VenueController::class, 'edit'])->name('admin.venues.edit');
+    Route::put('/admin/venues/{venue}', [VenueController::class, 'update'])->name('admin.venues.update');
+    Route::delete('/admin/venues/{venue}', [VenueController::class, 'destroy'])->name('admin.venues.destroy');
+
+    // Admin Broadcast Notifications
+    Route::get('/admin/notifications/broadcast', [NotificationController::class, 'broadcastCreate'])->name('admin.notifications.broadcast');
+    Route::post('/admin/notifications/broadcast', [NotificationController::class, 'broadcastStore'])->name('admin.notifications.broadcast.store');
 });
 
 Route::get('/fabrics/{fabric}', [FabricController::class, 'show'])->name('fabrics.show');

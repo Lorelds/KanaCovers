@@ -47,10 +47,39 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        
+        // Save user data before deletion for notifications
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $userPhone = $user->phone;
 
         Auth::logout();
 
         $user->delete();
+
+        // Notify admins that a user has deleted their account
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            \App\Models\Notification::create([
+                'user_id' => $admin->id,
+                'title' => 'User Deleted Account',
+                'message' => "User {$userName} ({$userEmail}) has deleted their account.",
+                'type' => 'system_info',
+                'is_read' => false,
+            ]);
+        }
+
+        // Send a goodbye WhatsApp message to the user
+        if ($userPhone) {
+            try {
+                $waMessage = "Halo Kak *{$userName}*,\n\n" .
+                             "Akun Anda di Kana Covers telah berhasil dihapus. Kami sedih melihat Anda pergi 😢\n\n" .
+                             "Terima kasih telah menggunakan layanan kami. Semoga kita bisa bertemu lagi di lain waktu!";
+                \App\Services\FonnteService::send($userPhone, $waMessage);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("WA Goodbye Failed for {$userPhone}: " . $e->getMessage());
+            }
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

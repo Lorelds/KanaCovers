@@ -9,7 +9,7 @@ class FonnteService
     public static function send($target, $message)
     {
         
-        $token = 'DH2FG22g15vHGhHLZLyH'; 
+        $token = 'a1VneuXppXcH1cAA27tB'; 
 
         try {
             $response = Http::withHeaders([

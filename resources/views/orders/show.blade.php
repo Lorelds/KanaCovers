@@ -50,7 +50,7 @@
                         </h1>
                     </div>
                     <p class="text-gray-500 text-sm mt-1 ml-9">Created on
-                        {{ $order->created_at->format('d M Y, H:i') }}
+                        {{ $order->created_at?->format('d M Y, H:i') ?? 'Date not available'}}
                     </p>
                 </div>
 
@@ -319,7 +319,7 @@
                         </div>
 
                         <div class="flex justify-between items-end">
-                            <span class="font-serif font-bold text-gray-700">Grand Total</span>
+                            <span class="font-serif font-bold text-gray-700">Grand Total</s$pan>
                             <span class="font-bold text-2xl text-indigo-600">
                                 Rp {{ number_format($order->total_price, 0, ',', '.') }}
                             </span>

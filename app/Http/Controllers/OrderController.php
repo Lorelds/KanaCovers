@@ -123,28 +123,92 @@ class OrderController extends Controller
         }
     }
 
-    private function sendWhatsAppNotifications($order, $grandTotal)
+    private function sendWhatsAppNotifications($order, $grandTotal = null, $type = 'created')
     {
-        if ($order->user->phone) {
-            $pesanUser = "Halo Kak *{$order->user->name}* 👋,\n\n" .
-                "Pesanan Sewa Dekorasi Anda berhasil dibuat!\n" .
-                "📝 *No. Order:* #{$order->order_number}\n" .
-                "💰 *Total:* Rp " . number_format($grandTotal, 0, ',', '.') . "\n" .
-                "⏳ *Status:* Menunggu Konfirmasi Admin\n\n" .
-                "Terima kasih!";
-            FonnteService::send($order->user->phone, $pesanUser);
-        }
-
+        $userPhone = $order->user->phone ?? null;
+        $userName = $order->user->name ?? 'Customer';
+        $orderNumber = $order->order_number;
+        $totalPrice = $grandTotal ?? $order->total_price;
+        $formattedTotal = "Rp " . number_format($totalPrice, 0, ',', '.');
+        $noteText = $order->note ? "🗒️ *Catatan:* {$order->note}\n" : "";
+        
         $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            if ($admin->phone) {
-                $pesanAdmin = "🔔 *ORDER BARU MASUK*\n\n" .
-                    "Customer: {$order->user->name}\n" .
-                    "Order: #{$order->order_number}\n" .
-                    "Total: Rp " . number_format($grandTotal, 0, ',', '.') . "\n\n" .
-                    "Segera cek dashboard untuk approve.";
-                FonnteService::send($admin->phone, $pesanAdmin);
-            }
+
+        switch ($type) {
+            case 'created':
+                if ($userPhone) {
+                    $pesanUser = "Halo Kak *{$userName}* 👋,\n\n" .
+                        "Pesanan Sewa Dekorasi Anda berhasil dibuat!\n" .
+                        "📝 *No. Order:* #{$orderNumber}\n" .
+                        "💰 *Total:* {$formattedTotal}\n" .
+                        "⏳ *Status:* Menunggu Konfirmasi Admin\n" .
+                        $noteText . "\n" .
+                        "Terima kasih!";
+                    FonnteService::send($userPhone, $pesanUser);
+                }
+
+                foreach ($admins as $admin) {
+                    if ($admin->phone) {
+                        $pesanAdmin = "🔔 *ORDER BARU MASUK*\n\n" .
+                            "Customer: {$userName}\n" .
+                            "Order: #{$orderNumber}\n" .
+                            "Total: {$formattedTotal}\n" .
+                            $noteText . "\n" .
+                            "Segera cek dashboard untuk approve.";
+                        FonnteService::send($admin->phone, $pesanAdmin);
+                    }
+                }
+                break;
+
+            case 'cart_created':
+                if ($userPhone) {
+                    $pesanUser = "Halo Kak *{$userName}*,\n\n" .
+                        "Terima kasih! Pesanan Anda telah berhasil dibuat. Berikut detailnya:\n\n" .
+                        "📝 *No. Order:* #{$orderNumber}\n" .
+                        "💰 *Total:* {$formattedTotal}\n" .
+                        "⏳ *Status:* Menunggu Konfirmasi Admin\n" .
+                        $noteText . "\n" .
+                        "Mohon tunggu sebentar ya, Admin kami akan segera mengecek pesanan Anda.\n\n" .
+                        "Terima kasih telah memilih Kana Covers!";
+                    FonnteService::send($userPhone, $pesanUser);
+                }
+
+                foreach ($admins as $admin) {
+                    if ($admin->phone) {
+                        $pesanAdmin = "🔔 *PESANAN BARU MASUK*\n\n" .
+                            "Halo Admin, ada pesanan baru yang perlu diproses:\n\n" .
+                            "Customer: {$userName}\n" .
+                            "Order: #{$orderNumber}\n" .
+                            "Total: {$formattedTotal}\n" .
+                            $noteText . "\n" .
+                            "Mohon segera login ke dashboard untuk melakukan konfirmasi.";
+                        FonnteService::send($admin->phone, $pesanAdmin);
+                    }
+                }
+                break;
+
+            case 'approved':
+                if ($userPhone) {
+                    $pesan = "✅ *PESANAN DISETUJUI*\n\n" .
+                        "Halo Kak *{$userName}*,\n\n" .
+                        "Kabar gembira! Pesanan Anda dengan nomor *#{$orderNumber}* telah disetujui oleh Admin.\n\n" .
+                        "*Langkah Selanjutnya:*\n" .
+                        "Silakan lakukan pembayaran atau persiapan pengambilan barang sesuai jadwal sewa.\n\n" .
+                        "Terima kasih telah memilih Kana Covers!";
+                    FonnteService::send($userPhone, $pesan);
+                }
+                break;
+
+            case 'rejected':
+                if ($userPhone) {
+                    $pesan = "❌ *PESANAN TIDAK DAPAT DIPROSES*\n\n" .
+                        "Halo Kak *{$userName}*,\n\n" .
+                        "Mohon maaf, pesanan Anda dengan nomor *#{$orderNumber}* saat ini tidak dapat kami proses (Stok tidak tersedia / Jadwal penuh).\n\n" .
+                        "Silakan hubungi Admin kami jika Anda ingin berkonsultasi mengenai opsi kain pengganti.\n\n" .
+                        "Terima kasih atas pengertiannya. 🙏";
+                    FonnteService::send($userPhone, $pesan);
+                }
+                break;
         }
     }
 
@@ -232,15 +296,10 @@ class OrderController extends Controller
         ]);
 
 
-        if ($order->user->phone) {
-            $pesan = "✅ *PESANAN DISETUJUI*\n\n" .
-                "Halo Kak *{$order->user->name}*,\n\n" .
-                "Kabar gembira! Pesanan Anda dengan nomor *#{$order->order_number}* telah disetujui oleh Admin.\n\n" .
-                "*Langkah Selanjutnya:*\n" .
-                "Silakan lakukan pembayaran atau persiapan pengambilan barang sesuai jadwal sewa.\n\n" .
-                "Terima kasih telah memilih Kana Covers!";
-
-            FonnteService::send($order->user->phone, $pesan);
+        try {
+            $this->sendWhatsAppNotifications($order, null, 'approved');
+        } catch (\Exception $waError) {
+            \Illuminate\Support\Facades\Log::error("WA Gagal: " . $waError->getMessage());
         }
 
         return redirect()->back()->with('success', 'Order #' . $order->order_number . ' has been approved!');
@@ -258,14 +317,10 @@ class OrderController extends Controller
             'is_read' => false,
         ]);
 
-        if ($order->user->phone) {
-            $pesan = " *PESANAN TIDAK DAPAT DIPROSES*\n\n" .
-                "Halo Kak *{$order->user->name}*,\n\n" .
-                "Mohon maaf, pesanan Anda dengan nomor *#{$order->order_number}* saat ini tidak dapat kami proses (Stok tidak tersedia / Jadwal penuh).\n\n" .
-                "Silakan hubungi Admin kami jika Anda ingin berkonsultasi mengenai opsi kain pengganti.\n\n" .
-                "Terima kasih atas pengertiannya. 🙏";
-
-            FonnteService::send($order->user->phone, $pesan);
+        try {
+            $this->sendWhatsAppNotifications($order, null, 'rejected');
+        } catch (\Exception $waError) {
+            \Illuminate\Support\Facades\Log::error("WA Gagal: " . $waError->getMessage());
         }
 
         return redirect()->back()->with('success', 'Order #' . $order->order_number . ' has been rejected.');
@@ -329,30 +384,11 @@ class OrderController extends Controller
                 'is_read' => false,
             ]);
 
-            if ($request->user()->phone) {
-                $pesanUser = "Halo Kak *{$request->user()->name}*,\n\n" .
-                    "Terima kasih! Pesanan Anda telah berhasil dibuat. Berikut detailnya:\n\n" .
-                    "*No. Order:* #{$order->order_number}\n" .
-                    "*Total:* Rp " . number_format($grandTotal, 0, ',', '.') . "\n" .
-                    "*Status:* Menunggu Konfirmasi Admin\n\n" .
-                    "Mohon tunggu sebentar ya, Admin kami akan segera mengecek pesanan Anda.\n\n" .
-                    "Terima kasih telah memilih Kana Covers! ";
-
-                FonnteService::send($request->user()->phone, $pesanUser);
-            }
-
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                if ($admin->phone) {
-                    $pesanAdmin = "🔔*PESANAN BARU MASUK*\n\n" .
-                        "Halo Admin, ada pesanan baru yang perlu diproses:\n\n" .
-                        "*Customer:* {$request->user()->name}\n" .
-                        "*No. Order:* #{$order->order_number}\n" .
-                        "*Total:* Rp " . number_format($grandTotal, 0, ',', '.') . "\n\n" .
-                        "Mohon segera login ke dashboard untuk melakukan konfirmasi. ";
-
-                    FonnteService::send($admin->phone, $pesanAdmin);
-                }
+            $order->load('user');
+            try {
+                $this->sendWhatsAppNotifications($order, $grandTotal, 'cart_created');
+            } catch (\Exception $waError) {
+                \Illuminate\Support\Facades\Log::error("WA Gagal: " . $waError->getMessage());
             }
         });
 
