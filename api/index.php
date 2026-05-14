@@ -4,12 +4,12 @@
  * and override storage paths to /tmp since Vercel is read-only
  */
 
-putenv('APP_CONFIG_CACHE=/tmp/config.php');
-putenv('APP_EVENTS_CACHE=/tmp/events.php');
-putenv('APP_PACKAGES_CACHE=/tmp/packages.php');
-putenv('APP_ROUTES_CACHE=/tmp/routes.php');
-putenv('APP_SERVICES_CACHE=/tmp/services.php');
-putenv('VIEW_COMPILED_PATH=/tmp');
+$compiled = '/tmp/storage/framework/views';
+if (!is_dir($compiled)) {
+    mkdir($compiled, 0755, true);
+}
+putenv("VIEW_COMPILED_PATH={$compiled}");
+
 putenv('SESSION_DRIVER=cookie');
 putenv('LOG_CHANNEL=stderr');
 
